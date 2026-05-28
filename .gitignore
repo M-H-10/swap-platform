@@ -1,0 +1,14 @@
+ # منع رفع مجلدات المكتبات
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# منع رفع البيانات السرية
+backend/.env
+.env
+
+# منع رفع مجلد البناء النهائي
+frontend/dist/
+
+# منع رفع ملفات السجلات
+*.log
