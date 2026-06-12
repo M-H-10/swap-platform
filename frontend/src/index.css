@@ -625,3 +625,15 @@ input[type="range"] {
   .navbar { padding: 0.75rem 1rem; }
   .nav-links { gap: 0.75rem; }
 }
+
+.btn-cancel {
+  margin-left: auto;
+  background: rgba(233,69,96,0.15);
+  border: 1px solid rgba(233,69,96,0.4);
+  color: #e94560;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}

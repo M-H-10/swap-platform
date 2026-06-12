@@ -18,6 +18,16 @@ router.get('/', async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
+    const { budget, duration, complexity, teamSize, title, description, category } = req.body;
+
+    // Validation
+    if (!title || title.trim().length < 3) return res.status(400).json({ message: 'Title must be at least 3 characters' });
+    if (!description || description.trim().length < 10) return res.status(400).json({ message: 'Description too short' });
+    if (!budget || budget <= 0) return res.status(400).json({ message: 'Budget must be positive' });
+    if (!duration || duration <= 0) return res.status(400).json({ message: 'Duration must be positive' });
+    if (!complexity || complexity < 1 || complexity > 10) return res.status(400).json({ message: 'Complexity must be 1-10' });
+    if (!teamSize || teamSize < 1) return res.status(400).json({ message: 'Team size must be at least 1' });
+    
     const creator = await User.findById(req.user.userId);
     const projectData = {
       ...req.body,

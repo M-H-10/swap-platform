@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getSwaps, getMe, acceptSwap } from '../api';
+import { getSwaps, getMe, acceptSwap, cancelSwap } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import toast from 'react-hot-toast';
@@ -28,6 +28,17 @@ const Dashboard = () => {
       toast.error('Failed to accept');
     }
   };
+
+  const handleCancel = async (id) => {
+  if (!window.confirm('Cancel this swap contract?')) return;
+  try {
+    await cancelSwap(id);
+    setSwaps(swaps.map(s => s._id === id ? {...s, status: 'cancelled'} : s));
+    toast.success('Swap cancelled successfully.');
+  } catch {
+    toast.error('Failed to cancel');
+  }
+};
 
   const chartData = swaps.slice(0, 6).map(s => ({
     name: s.project?.title?.substring(0, 10) || 'Project',
@@ -109,10 +120,14 @@ const Dashboard = () => {
             <div className="swap-footer">
               <span className={`status-badge status-${swap.status}`}>{swap.status}</span>
               <span className={`escrow-badge escrow-${swap.escrowStatus}`}>🔒 {swap.escrowStatus}</span>
-              {swap.status === 'proposed' && swap.partyB?.user?._id === user?.userId && (
-                <motion.button className="btn-accept" onClick={() => handleAccept(swap._id)}
-                  whileHover={{ scale: 1.05 }}>Accept ✓</motion.button>
-              )}
+              {swap.status === 'proposed' && swap.partyB?.user?._id?.toString() === user?.userId && (
+  <motion.button className="btn-accept" onClick={() => handleAccept(swap._id)}
+    whileHover={{ scale: 1.05 }}>Accept ✓</motion.button>
+)}
+{swap.status === 'proposed' && swap.partyA?.user?._id?.toString() === user?.userId && (
+  <motion.button className="btn-cancel" onClick={() => handleCancel(swap._id)}
+    whileHover={{ scale: 1.05 }}>Cancel ✕</motion.button>
+)}
             </div>
           </motion.div>
         ))}

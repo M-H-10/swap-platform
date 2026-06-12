@@ -95,4 +95,26 @@ router.patch('/:id/accept', auth, async (req, res) => {
   }
 });
 
+// إلغاء عقد Swap (فقط إذا كان proposed وأنت partyA)
+router.patch('/:id/cancel', auth, async (req, res) => {
+  try {
+    const swap = await Swap.findById(req.params.id);
+    if (!swap) return res.status(404).json({ message: 'Swap not found' });
+    
+    // فقط partyA يمكنه الإلغاء
+    if (swap.partyA.user.toString() !== req.user.userId)
+      return res.status(403).json({ message: 'Only Party A can cancel' });
+    
+    // لا يمكن إلغاء عقد نشط أو مكتمل
+    if (swap.status !== 'proposed')
+      return res.status(400).json({ message: 'Can only cancel proposed swaps' });
+    
+    swap.status = 'cancelled';
+    await swap.save();
+    res.json({ message: 'Swap cancelled', swap });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

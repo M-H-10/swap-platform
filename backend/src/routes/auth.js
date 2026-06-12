@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 
 router.post('/register', async (req, res) => {
   try {
@@ -37,6 +38,25 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
     res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// البحث عن مستخدم بالاسم (للـ SwapCalculator)
+router.get('/search', auth, async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username || username.trim().length < 2) {
+      return res.status(400).json({ message: 'Username too short' });
+    }
+    const users = await User.find({
+      username: { $regex: username.trim(), $options: 'i' },
+      _id: { $ne: req.user.userId }
+    })
+    .select('username reputation successRate completedProjects role')
+    .limit(5);
+    res.json(users);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
