@@ -12,3 +12,17 @@ frontend/dist/
 
 # منع رفع ملفات السجلات
 *.log
+
+
+
+# أي ملف .env في أي مجلد
+**/.env
+
+# Go: الملفات التنفيذية الناتجة عن الترجمة
+backend-go/bin/
+*.exe
+
+# Python
+ml-service/.venv/
+__pycache__/
+*.pyc
