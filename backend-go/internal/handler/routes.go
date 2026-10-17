@@ -12,6 +12,8 @@ import (
 type Handlers struct {
 	Health      *HealthHandler
 	Auth        *AuthHandler
+	Projects    *ProjectHandler
+	Users       *UserHandler
 	RequireAuth fiber.Handler // middleware that checks the access token
 }
 
@@ -28,6 +30,22 @@ func RegisterRoutes(app *fiber.App, h Handlers) {
 		auth.Post("/refresh", h.Auth.Refresh)
 		auth.Post("/logout", h.Auth.Logout)
 		auth.Get("/me", h.RequireAuth, h.Auth.Me)
+	}
+
+	if h.Projects != nil {
+		projects := api.Group("/projects")
+		projects.Get("/", h.Projects.List)                             // anyone can browse
+		projects.Post("/", h.RequireAuth, h.Projects.Create)           // logged-in users only
+		projects.Post("/estimate", h.RequireAuth, h.Projects.Estimate) // score without saving
+		projects.Get("/:id", h.Projects.Get)                           // anyone can view
+		projects.Patch("/:id", h.RequireAuth, h.Projects.Update)       // creator only
+		projects.Post("/:id/cancel", h.RequireAuth, h.Projects.Cancel) // creator only
+	}
+
+	if h.Users != nil {
+		users := api.Group("/users")
+		users.Get("/", h.RequireAuth, h.Users.Search)
+		users.Get("/:id", h.Users.Get)
 	}
 
 	// Anything that did not match a route above ends here.

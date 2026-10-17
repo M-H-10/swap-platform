@@ -171,3 +171,30 @@ func translateUserError(err error) error {
 	}
 	return fmt.Errorf("insert user: %w", err)
 }
+
+// SearchUsers finds users whose username contains the text, best
+// reputation first. excludeID leaves out one user (the one searching).
+func (r *UserRepository) SearchUsers(ctx context.Context, query, excludeID string, limit int) ([]domain.User, error) {
+	rows, err := r.pool.Query(ctx, selectUser+`
+		WHERE u.username ILIKE $1 AND u.id <> $2
+		ORDER BY COALESCE(r.score_bp, 0) DESC, lower(u.username)
+		LIMIT $3`,
+		"%"+escapeLike(query)+"%", excludeID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("search users: %w", err)
+	}
+	defer rows.Close()
+
+	users := []domain.User{}
+	for rows.Next() {
+		u, err := scanUser(rows)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("search users: %w", err)
+	}
+	return users, nil
+}

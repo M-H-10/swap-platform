@@ -47,6 +47,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("auth service error: %v", err)
 	}
+	projectService := service.NewProjectService(repository.NewProjectRepository(pool))
+	userService := service.NewUserService(users)
 
 	// 4. Create the Fiber application.
 	app := fiber.New(fiber.Config{
@@ -59,6 +61,8 @@ func main() {
 	handler.RegisterRoutes(app, handler.Handlers{
 		Health:      handler.NewHealthHandler(version, pool),
 		Auth:        handler.NewAuthHandler(authService, cfg.CookieSecure),
+		Projects:    handler.NewProjectHandler(projectService),
+		Users:       handler.NewUserHandler(userService),
 		RequireAuth: middleware.RequireAuth(tokens),
 	})
 
