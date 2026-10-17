@@ -18,6 +18,7 @@ type Config struct {
 	Host        string   // address to listen on, e.g. 127.0.0.1
 	Port        string   // port to listen on, e.g. 5002
 	CORSOrigins []string // frontend addresses allowed to call the API
+	DatabaseURL string   // PostgreSQL connection string
 }
 
 // Load reads the .env file (if it exists) and then the environment variables.
@@ -34,9 +35,11 @@ func Load() (*Config, error) {
 		Host:        getEnv("APP_HOST", "127.0.0.1"),
 		Port:        getEnv("APP_PORT", "5002"),
 		CORSOrigins: splitList(getEnv("CORS_ORIGINS", "http://localhost:5173")),
+		DatabaseURL: getEnv("DATABASE_URL", ""),
 	}
 
 	if err := cfg.validate(); err != nil {
+
 		return nil, err
 	}
 	return cfg, nil
@@ -57,6 +60,9 @@ func (c *Config) validate() error {
 	}
 	if len(c.CORSOrigins) == 0 {
 		return errors.New("CORS_ORIGINS must contain at least one address")
+	}
+	if c.DatabaseURL == "" {
+		return errors.New("DATABASE_URL is required (see .env.example)")
 	}
 	return nil
 }

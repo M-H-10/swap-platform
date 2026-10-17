@@ -14,6 +14,7 @@ import (
 	"github.com/M-H-10/swap-platform/backend-go/configs"
 	"github.com/M-H-10/swap-platform/backend-go/internal/handler"
 	"github.com/M-H-10/swap-platform/backend-go/internal/middleware"
+	"github.com/M-H-10/swap-platform/backend-go/internal/repository"
 )
 
 const version = "2.0.0-dev"
@@ -25,17 +26,25 @@ func main() {
 		log.Fatalf("config error: %v", err)
 	}
 
-	// 2. Create the Fiber application.
+	// 2. Connect to PostgreSQL. The pool is closed when main() returns.
+	pool, err := repository.NewPool(context.Background(), cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("database error: %v", err)
+	}
+	defer pool.Close()
+	log.Println("connected to PostgreSQL")
+
+	// 3. Create the Fiber application.
 	app := fiber.New(fiber.Config{
 		AppName:      "Swap Platform API " + version,
 		ErrorHandler: handler.ErrorHandler,
 	})
 
-	// 3. Middleware first, then routes.
+	// 4. Middleware first, then routes.
 	middleware.Register(app, cfg.CORSOrigins)
-	handler.RegisterRoutes(app, handler.NewHealthHandler(version))
+	handler.RegisterRoutes(app, handler.NewHealthHandler(version, pool))
 
-	// 4. Stop cleanly on Ctrl+C: finish the requests in progress first.
+	// 5. Stop cleanly on Ctrl+C: finish the requests in progress first.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
