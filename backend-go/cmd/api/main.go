@@ -49,6 +49,8 @@ func main() {
 	}
 	projectService := service.NewProjectService(repository.NewProjectRepository(pool))
 	userService := service.NewUserService(users)
+	walletService := service.NewWalletService(repository.NewWalletRepository(pool))
+	swapService := service.NewSwapService(repository.NewSwapRepository(pool))
 
 	// 4. Create the Fiber application.
 	app := fiber.New(fiber.Config{
@@ -63,7 +65,10 @@ func main() {
 		Auth:        handler.NewAuthHandler(authService, cfg.CookieSecure),
 		Projects:    handler.NewProjectHandler(projectService),
 		Users:       handler.NewUserHandler(userService),
+		Wallets:     handler.NewWalletHandler(walletService),
+		Swaps:       handler.NewSwapHandler(swapService),
 		RequireAuth: middleware.RequireAuth(tokens),
+		DemoDeposit: cfg.AppEnv == "development",
 	})
 
 	// 6. Stop cleanly on Ctrl+C: finish the requests in progress first.

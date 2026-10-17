@@ -10,6 +10,7 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrInvalidToken       = errors.New("invalid or expired token")
 	ErrForbidden          = errors.New("you are not allowed to do this")
+	ErrInsufficientFunds  = errors.New("not enough money in the wallet")
 )
 
 // ValidationError means the client sent bad input. The message is safe to

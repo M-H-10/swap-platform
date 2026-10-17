@@ -14,7 +14,10 @@ type Handlers struct {
 	Auth        *AuthHandler
 	Projects    *ProjectHandler
 	Users       *UserHandler
+	Wallets     *WalletHandler
+	Swaps       *SwapHandler
 	RequireAuth fiber.Handler // middleware that checks the access token
+	DemoDeposit bool          // true only in development: allows free test money
 }
 
 // RegisterRoutes connects every URL to the function that handles it.
@@ -46,6 +49,27 @@ func RegisterRoutes(app *fiber.App, h Handlers) {
 		users := api.Group("/users")
 		users.Get("/", h.RequireAuth, h.Users.Search)
 		users.Get("/:id", h.Users.Get)
+	}
+
+	if h.Wallets != nil {
+		wallet := api.Group("/wallet")
+		wallet.Get("/", h.RequireAuth, h.Wallets.Get)
+		wallet.Get("/transactions", h.RequireAuth, h.Wallets.Transactions)
+		if h.DemoDeposit {
+			wallet.Post("/deposit", h.RequireAuth, h.Wallets.Deposit)
+		}
+	}
+
+	if h.Swaps != nil {
+		swaps := api.Group("/swaps")
+		swaps.Post("/calculate", h.RequireAuth, h.Swaps.Calculate) // terms without saving
+		swaps.Post("/", h.RequireAuth, h.Swaps.Propose)            // party A (project creator)
+		swaps.Get("/", h.RequireAuth, h.Swaps.List)                // my swaps
+		swaps.Get("/:id", h.RequireAuth, h.Swaps.Get)              // parties only
+		swaps.Post("/:id/accept", h.RequireAuth, h.Swaps.Accept)   // party B
+		swaps.Post("/:id/reject", h.RequireAuth, h.Swaps.Reject)   // party B
+		swaps.Post("/:id/cancel", h.RequireAuth, h.Swaps.Cancel)   // either party
+		swaps.Post("/:id/outcome", h.RequireAuth, h.Swaps.Outcome) // either party
 	}
 
 	// Anything that did not match a route above ends here.
