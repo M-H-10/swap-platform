@@ -19,7 +19,7 @@ func (f fakePinger) Ping(ctx context.Context) error { return f.err }
 // newTestApp builds a small app with only our routes, no real server.
 func newTestApp(db Pinger) *fiber.App {
 	app := fiber.New(fiber.Config{ErrorHandler: ErrorHandler})
-	RegisterRoutes(app, NewHealthHandler("test", db))
+	RegisterRoutes(app, Handlers{Health: NewHealthHandler("test", db)})
 	return app
 }
 

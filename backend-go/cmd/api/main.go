@@ -15,9 +15,14 @@ import (
 	"github.com/M-H-10/swap-platform/backend-go/internal/handler"
 	"github.com/M-H-10/swap-platform/backend-go/internal/middleware"
 	"github.com/M-H-10/swap-platform/backend-go/internal/repository"
+	"github.com/M-H-10/swap-platform/backend-go/internal/service"
 )
 
 const version = "2.0.0-dev"
+
+// bcryptCost 12 means about 0.3 s per password hash: fast enough for a
+// user, slow enough to make guessing millions of passwords impractical.
+const bcryptCost = 12
 
 func main() {
 	// 1. Read the settings.
@@ -34,17 +39,30 @@ func main() {
 	defer pool.Close()
 	log.Println("connected to PostgreSQL")
 
-	// 3. Create the Fiber application.
+	// 3. Build the layers from the inside out:
+	//    repository (SQL) -> service (rules) -> handler (HTTP).
+	users := repository.NewUserRepository(pool)
+	tokens := service.NewTokenManager(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
+	authService, err := service.NewAuthService(users, tokens, bcryptCost)
+	if err != nil {
+		log.Fatalf("auth service error: %v", err)
+	}
+
+	// 4. Create the Fiber application.
 	app := fiber.New(fiber.Config{
 		AppName:      "Swap Platform API " + version,
 		ErrorHandler: handler.ErrorHandler,
 	})
 
-	// 4. Middleware first, then routes.
+	// 5. Middleware first, then routes.
 	middleware.Register(app, cfg.CORSOrigins)
-	handler.RegisterRoutes(app, handler.NewHealthHandler(version, pool))
+	handler.RegisterRoutes(app, handler.Handlers{
+		Health:      handler.NewHealthHandler(version, pool),
+		Auth:        handler.NewAuthHandler(authService, cfg.CookieSecure),
+		RequireAuth: middleware.RequireAuth(tokens),
+	})
 
-	// 5. Stop cleanly on Ctrl+C: finish the requests in progress first.
+	// 6. Stop cleanly on Ctrl+C: finish the requests in progress first.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

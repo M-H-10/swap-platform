@@ -5,21 +5,37 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
+
+	"github.com/M-H-10/swap-platform/backend-go/internal/domain"
 )
 
 // ErrorHandler turns every error returned by a handler into one JSON shape:
 //
-//	{"error": {"code": 404, "message": "route not found"}}
+//	{"error": {"code": 409, "message": "email is already registered"}}
 //
-// so the frontend always knows where to find the message.
+// Validation errors also say which field is wrong:
+//
+//	{"error": {"code": 400, "message": "...", "field": "password"}}
 func ErrorHandler(c fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
 	message := "internal server error"
+	field := ""
 
 	var fe *fiber.Error
-	if errors.As(err, &fe) {
-		code = fe.Code
-		message = fe.Message
+	var ve *domain.ValidationError
+	var ce *domain.ConflictError
+
+	switch {
+	case errors.As(err, &fe):
+		code, message = fe.Code, fe.Message
+	case errors.As(err, &ve):
+		code, message, field = fiber.StatusBadRequest, ve.Error(), ve.Field
+	case errors.As(err, &ce):
+		code, message = fiber.StatusConflict, ce.Message
+	case errors.Is(err, domain.ErrInvalidCredentials), errors.Is(err, domain.ErrInvalidToken):
+		code, message = fiber.StatusUnauthorized, err.Error()
+	case errors.Is(err, domain.ErrNotFound):
+		code, message = fiber.StatusNotFound, "not found"
 	}
 
 	// 5xx errors are our fault: log the real cause, but never send it to
@@ -28,7 +44,9 @@ func ErrorHandler(c fiber.Ctx, err error) error {
 		log.Printf("[ERROR] %s %s: %v", c.Method(), c.Path(), err)
 	}
 
-	return c.Status(code).JSON(fiber.Map{
-		"error": fiber.Map{"code": code, "message": message},
-	})
+	body := fiber.Map{"code": code, "message": message}
+	if field != "" {
+		body["field"] = field
+	}
+	return c.Status(code).JSON(fiber.Map{"error": body})
 }
