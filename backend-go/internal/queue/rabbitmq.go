@@ -149,3 +149,12 @@ func (c *Client) Publish(ctx context.Context, queue string, msg any) error {
 	}
 	return nil
 }
+
+// Connected reports whether the client is connected right now. Short
+// programs (like cmd/seed) use it to wait for the connection before they
+// publish anything.
+func (c *Client) Connected() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.ch != nil
+}

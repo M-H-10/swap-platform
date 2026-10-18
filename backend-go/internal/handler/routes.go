@@ -11,6 +11,7 @@ import (
 // "this part is not used" (handy in tests).
 type Handlers struct {
 	Health      *HealthHandler
+	Docs        *DocsHandler
 	Auth        *AuthHandler
 	Projects    *ProjectHandler
 	Users       *UserHandler
@@ -27,6 +28,11 @@ func RegisterRoutes(app *fiber.App, h Handlers) {
 	api := app.Group("/api")
 
 	api.Get("/health", h.Health.Check)
+
+	if h.Docs != nil {
+		api.Get("/docs", h.Docs.UI)                // Swagger page
+		api.Get("/docs/openapi.yaml", h.Docs.Spec) // the OpenAPI file
+	}
 
 	if h.Auth != nil {
 		auth := api.Group("/auth")
