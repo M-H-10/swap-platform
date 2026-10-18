@@ -584,6 +584,8 @@ input[type="range"] {
 .status-active { background: rgba(108,99,255,0.15); color: var(--accent); }
 .status-completed { background: rgba(0,212,170,0.15); color: var(--success); }
 .status-cancelled { background: rgba(233,69,96,0.15); color: var(--accent2); }
+.status-failed { background: rgba(233,69,96,0.25); color: var(--accent2); }
+.status-rejected { background: rgba(136,136,136,0.15); color: var(--text2); }
 
 .escrow-badge {
   padding: 0.2rem 0.6rem; border-radius: 20px;

@@ -1,0 +1,150 @@
+/* Stage 9: styles for the new pages (wallet, swap, profile, project).
+   Every colour comes from a variable, so the design stage can change the
+   whole look by editing only the :root block. */
+
+:root {
+  --warning: #f59e0b;
+  --surface: var(--bg2);
+  --surface-soft: rgba(255, 255, 255, 0.03);
+  --radius: 16px;
+  --radius-sm: 8px;
+  --success-soft: rgba(0, 212, 170, 0.12);
+  --danger-soft: rgba(233, 69, 96, 0.12);
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --accent-soft: rgba(108, 99, 255, 0.12);
+}
+
+/* ----- page layout ----- */
+
+.page { max-width: 1000px; margin: 0 auto; }
+
+.page-title {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.page-title h1 { font-size: 1.8rem; font-weight: 700; }
+.page-title .muted { flex-basis: 100%; }
+
+.back-link {
+  display: inline-block; margin-bottom: 1rem;
+  color: var(--text2); text-decoration: none; font-size: 0.9rem;
+}
+.back-link:hover { color: var(--accent); }
+
+.grid-2 {
+  display: grid; gap: 1.5rem; margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+}
+.grid-2 .panel { margin-bottom: 0; }
+.panel h3 { font-size: 1.05rem; margin-bottom: 1rem; }
+
+.muted { color: var(--text2); font-size: 0.9rem; }
+.link { color: var(--accent); text-decoration: none; font-weight: 600; }
+.link:hover { text-decoration: underline; }
+
+/* ----- key / value lists ----- */
+
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 0.6rem 1.5rem; }
+.kv dt { color: var(--text2); font-size: 0.9rem; }
+.kv dd { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ----- big numbers ----- */
+
+.big-number { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.big-label { color: var(--text2); font-size: 0.85rem; margin-top: 0.2rem; }
+
+/* ----- tables ----- */
+
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.data-table th {
+  text-align: left; color: var(--text2); font-weight: 500;
+  padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border);
+}
+.data-table td { padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--surface-soft); }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.amount-plus { color: var(--success); }
+.amount-minus { color: var(--accent2); }
+.amount-neutral { color: var(--text2); }
+
+/* ----- small labels ----- */
+
+.tag {
+  display: inline-block; padding: 0.15rem 0.6rem; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 600;
+  background: var(--accent-soft); color: var(--accent);
+}
+.tag-success { background: var(--success-soft); color: var(--success); }
+.tag-danger { background: var(--danger-soft); color: var(--accent2); }
+.tag-warning { background: var(--warning-soft); color: var(--warning); }
+
+/* ----- notes ----- */
+
+.note {
+  padding: 0.8rem 1rem; border-radius: var(--radius-sm);
+  background: var(--accent-soft); font-size: 0.9rem; margin-top: 1rem;
+}
+.note-warning { background: var(--warning-soft); color: var(--warning); }
+.note-success { background: var(--success-soft); color: var(--success); }
+
+/* ----- buttons and forms ----- */
+
+.actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+
+.btn-small {
+  padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border);
+  background: transparent; color: var(--text);
+}
+.btn-small:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-small.success { background: var(--success-soft); border-color: var(--success); color: var(--success); }
+.btn-small.danger { background: var(--danger-soft); border-color: var(--accent2); color: var(--accent2); }
+
+.inline-form { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }
+.inline-form .form-group { margin-bottom: 0; flex: 1; min-width: 180px; }
+
+/* ----- outcome reports ----- */
+
+.outcome-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.6rem 0; border-bottom: 1px solid var(--surface-soft);
+}
+
+/* ----- stars ----- */
+
+.stars { color: var(--warning); letter-spacing: 2px; }
+.star-picker { display: flex; gap: 0.25rem; }
+.star-picker button {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.8rem; line-height: 1; color: var(--text2);
+}
+.star-picker button.on { color: var(--warning); }
+
+.review { padding: 1rem 0; border-bottom: 1px solid var(--surface-soft); }
+.review:last-child { border-bottom: none; }
+.review-head { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.4rem; }
+
+/* ----- formula vs ML bars ----- */
+
+.compare-row { margin-bottom: 1.2rem; }
+.compare-label { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem; }
+.bar-track { height: 12px; background: var(--surface-soft); border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease-out; }
+
+.factor-row {
+  display: flex; justify-content: space-between;
+  padding: 0.45rem 0; border-bottom: 1px solid var(--surface-soft); font-size: 0.9rem;
+}
+
+/* ----- links added to older pages ----- */
+
+.card-title-link { color: inherit; text-decoration: none; }
+.card-title-link:hover { color: var(--accent); }
+.nav-links a.user-badge { color: var(--accent); font-weight: 600; }
+a.btn-small { text-decoration: none; display: inline-block; }

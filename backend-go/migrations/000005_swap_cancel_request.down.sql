@@ -1,0 +1,1 @@
+ALTER TABLE swaps DROP COLUMN cancel_requested_by;
