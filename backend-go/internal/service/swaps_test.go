@@ -150,7 +150,7 @@ func (f *fakeSwapStore) RejectOtherProposals(context.Context, string, string) er
 
 func newSwapTestService() (*SwapService, *fakeSwapStore) {
 	store := newFakeSwapStore()
-	svc := NewSwapService(store)
+	svc := NewSwapService(store, nil)
 	svc.now = func() time.Time { return time.Date(2026, 10, 18, 12, 0, 0, 0, time.UTC) }
 	return svc, store
 }

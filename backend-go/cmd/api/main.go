@@ -50,7 +50,8 @@ func main() {
 	projectService := service.NewProjectService(repository.NewProjectRepository(pool))
 	userService := service.NewUserService(users)
 	walletService := service.NewWalletService(repository.NewWalletRepository(pool))
-	swapService := service.NewSwapService(repository.NewSwapRepository(pool))
+	reputationService := service.NewReputationService(repository.NewReputationRepository(pool))
+	swapService := service.NewSwapService(repository.NewSwapRepository(pool), reputationService)
 
 	// 4. Create the Fiber application.
 	app := fiber.New(fiber.Config{
@@ -67,6 +68,7 @@ func main() {
 		Users:       handler.NewUserHandler(userService),
 		Wallets:     handler.NewWalletHandler(walletService),
 		Swaps:       handler.NewSwapHandler(swapService),
+		Reputation:  handler.NewReputationHandler(reputationService),
 		RequireAuth: middleware.RequireAuth(tokens),
 		DemoDeposit: cfg.AppEnv == "development",
 	})

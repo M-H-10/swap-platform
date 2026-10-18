@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/M-H-10/swap-platform/backend-go/internal/domain"
@@ -20,16 +21,23 @@ type SwapStore interface {
 	InTx(ctx context.Context, fn func(tx domain.SwapTx) error) error
 }
 
+// ReputationUpdater recalculates a user's reputation. The swap service
+// calls it when a swap closes. (ReputationService has this method.)
+type ReputationUpdater interface {
+	Recompute(ctx context.Context, userID, reason string) (domain.Reputation, error)
+}
+
 // SwapService holds the rules of the swap life cycle and of the money
 // that moves with it.
 type SwapService struct {
-	store SwapStore
-	now   func() time.Time
+	store      SwapStore
+	reputation ReputationUpdater // may be nil (in tests)
+	now        func() time.Time
 }
 
 // NewSwapService builds the service.
-func NewSwapService(store SwapStore) *SwapService {
-	return &SwapService{store: store, now: time.Now}
+func NewSwapService(store SwapStore, reputation ReputationUpdater) *SwapService {
+	return &SwapService{store: store, reputation: reputation, now: time.Now}
 }
 
 // Calculate shows the terms of a possible swap without saving anything.
@@ -194,7 +202,7 @@ func (s *SwapService) Reject(ctx context.Context, userID, id string) (domain.Swa
 //     request, the second call (by the other party) cancels the swap and
 //     gives each party its full guarantee back, without a fee.
 func (s *SwapService) Cancel(ctx context.Context, userID, id string) (domain.Swap, error) {
-	return s.change(ctx, userID, id, func(tx domain.SwapTx, swap *domain.Swap) error {
+	swap, err := s.change(ctx, userID, id, func(tx domain.SwapTx, swap *domain.Swap) error {
 		now := s.now()
 		switch swap.Status {
 		case domain.SwapProposed:
@@ -229,6 +237,11 @@ func (s *SwapService) Cancel(ctx context.Context, userID, id string) (domain.Swa
 			return &domain.ConflictError{Message: "this swap is already closed"}
 		}
 	})
+	// Only an ACTIVE swap that got cancelled counts in the reputation.
+	if err == nil && swap.Status == domain.SwapCancelled && swap.AcceptedAt != nil {
+		s.updateReputation(ctx, swap)
+	}
+	return swap, err
 }
 
 // ReportOutcome records what one party says about the result. When both
@@ -239,7 +252,7 @@ func (s *SwapService) Cancel(ctx context.Context, userID, id string) (domain.Swa
 // If they disagree, the swap stays active and either party may change its
 // answer. (A real dispute process with an arbiter is outside this project.)
 func (s *SwapService) ReportOutcome(ctx context.Context, userID, id string, outcome domain.Outcome) (domain.Swap, error) {
-	return s.change(ctx, userID, id, func(tx domain.SwapTx, swap *domain.Swap) error {
+	swap, err := s.change(ctx, userID, id, func(tx domain.SwapTx, swap *domain.Swap) error {
 		if swap.Status != domain.SwapActive {
 			return &domain.ConflictError{Message: "only an active swap can get an outcome"}
 		}
@@ -284,6 +297,26 @@ func (s *SwapService) ReportOutcome(ctx context.Context, userID, id string, outc
 		}
 		return tx.SetProjectStatus(ctx, swap.ProjectID, projectStatus)
 	})
+	if err == nil && (swap.Status == domain.SwapCompleted || swap.Status == domain.SwapFailed) {
+		s.updateReputation(ctx, swap)
+	}
+	return swap, err
+}
+
+// updateReputation recalculates the reputation of both parties after the
+// swap has closed. It runs AFTER the money transaction: the money is
+// already settled, so a problem here is only logged and does not fail the
+// request (the next recalculation will include this swap anyway).
+func (s *SwapService) updateReputation(ctx context.Context, swap domain.Swap) {
+	if s.reputation == nil {
+		return
+	}
+	reason := "swap_" + string(swap.Status) // swap_completed, swap_failed, swap_cancelled
+	for _, userID := range []string{swap.PartyAID, swap.PartyBID} {
+		if _, err := s.reputation.Recompute(ctx, userID, reason); err != nil {
+			log.Printf("reputation update for user %s failed: %v", userID, err)
+		}
+	}
 }
 
 // change runs one rule inside a transaction: lock the swap, check that the
