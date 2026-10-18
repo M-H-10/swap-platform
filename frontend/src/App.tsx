@@ -1,6 +1,9 @@
+import type { ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
+import { useAuth } from './context/auth-context';
 import Navbar from './components/Navbar';
+import ParticleBackground from './components/ParticleBackground';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -8,11 +11,13 @@ import Projects from './pages/Projects';
 import CreateProject from './pages/CreateProject';
 import SwapCalculator from './pages/SwapCalculator';
 import Dashboard from './pages/Dashboard';
-import ParticleBackground from './components/ParticleBackground';
 
-const ProtectedRoute = ({ children }) => {
-  const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  const { user, ready } = useAuth();
+  // Wait for the first "is there a session?" answer, otherwise a logged-in
+  // user who reloads the page would be sent to /login for a moment.
+  if (!ready) return <div className="loading">Loading...</div>;
+  return user ? children : <Navigate to="/login" replace />;
 };
 
 const AppContent = () => (

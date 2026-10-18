@@ -2,12 +2,29 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createProject } from '../api';
+import { errorMessage, formatPercent, rublesToKopecks } from '../lib/format';
+import type { Category, KPI } from '../types';
 import toast from 'react-hot-toast';
 import { Plus, Trash2 } from 'lucide-react';
 
+// The form keeps what the user typed (text). It is turned into numbers,
+// and rubles into kopecks, only when the project is sent.
+interface FormState {
+  title: string;
+  description: string;
+  category: Category;
+  budget: string; // rubles, as typed
+  duration: string; // days, as typed
+  complexity: number;
+  teamSize: number;
+  kpis: KPI[];
+}
+
+const categories: Category[] = ['web', 'mobile', 'design', 'marketing', 'other'];
+
 const CreateProject = () => {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     title: '', description: '', category: 'web',
     budget: '', duration: '', complexity: 5, teamSize: 2,
     kpis: [{ name: '', target: '', weight: 100 }]
@@ -16,21 +33,34 @@ const CreateProject = () => {
   const navigate = useNavigate();
 
   const addKPI = () => setForm({...form, kpis: [...form.kpis, { name: '', target: '', weight: 0 }]});
-  const removeKPI = (i) => setForm({...form, kpis: form.kpis.filter((_, idx) => idx !== i)});
-  const updateKPI = (i, field, val) => {
-    const kpis = [...form.kpis];
-    kpis[i][field] = val;
+  const removeKPI = (i: number) => setForm({...form, kpis: form.kpis.filter((_, idx) => idx !== i)});
+  const updateKPI = <K extends keyof KPI>(i: number, field: K, val: KPI[K]) => {
+    const kpis = form.kpis.map((k, idx) => idx === i ? { ...k, [field]: val } : k);
     setForm({...form, kpis});
   };
+
+  // Rows the user left empty are not sent. The server checks that the
+  // weights of the remaining KPIs add up to 100.
+  const filledKPIs = form.kpis.filter(k => k.name.trim() || k.target.trim());
+  const weightSum = filledKPIs.reduce((sum, k) => sum + k.weight, 0);
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await createProject({ ...form, budget: Number(form.budget), duration: Number(form.duration) });
-      toast.success('Project created!');
+      const { data } = await createProject({
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        budget: rublesToKopecks(form.budget),
+        duration_days: Number(form.duration),
+        complexity: form.complexity,
+        team_size: form.teamSize,
+        kpis: filledKPIs,
+      });
+      toast.success(`Project created! Success probability: ${formatPercent(data.score.success_probability_bp)}`);
       navigate('/projects');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed');
+      toast.error(errorMessage(err, 'Failed'));
     }
     setLoading(false);
   };
@@ -57,19 +87,19 @@ const CreateProject = () => {
                 onChange={e => setForm({...form, title: e.target.value})} />
             </div>
             <div className="form-group">
-              <label>Description</label>
+              <label>Description (10+ characters)</label>
               <textarea placeholder="Describe your project..." value={form.description}
                 onChange={e => setForm({...form, description: e.target.value})} />
             </div>
             <div className="form-group">
               <label>Category</label>
-              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
-                {['web','mobile','design','marketing','other'].map(c =>
+              <select value={form.category} onChange={e => setForm({...form, category: e.target.value as Category})}>
+                {categories.map(c =>
                   <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
               </select>
             </div>
             <button className="btn-primary" onClick={() => setStep(2)}
-              disabled={!form.title || !form.description}>Next →</button>
+              disabled={form.title.trim().length < 3 || form.description.trim().length < 10}>Next →</button>
           </motion.div>
         )}
 
@@ -80,12 +110,12 @@ const CreateProject = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Budget (₽)</label>
-                <input type="number" placeholder="1000000" value={form.budget}
+                <input type="number" min="100" placeholder="1000000" value={form.budget}
                   onChange={e => setForm({...form, budget: e.target.value})} />
               </div>
               <div className="form-group">
                 <label>Duration (days)</label>
-                <input type="number" placeholder="90" value={form.duration}
+                <input type="number" min="1" placeholder="90" value={form.duration}
                   onChange={e => setForm({...form, duration: e.target.value})} />
               </div>
             </div>
@@ -97,7 +127,7 @@ const CreateProject = () => {
             </div>
             <div className="form-group">
               <label>Team Size: {form.teamSize}</label>
-              <input type="range" min="2" max="20" value={form.teamSize}
+              <input type="range" min="1" max="20" value={form.teamSize}
                 onChange={e => setForm({...form, teamSize: Number(e.target.value)})} />
             </div>
             <div className="btn-row">
@@ -112,7 +142,7 @@ const CreateProject = () => {
           <motion.div key="step3" className="form-step"
             initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
             <h2>KPI Definition</h2>
-            <p className="step-desc">Define success metrics for your swap contract</p>
+            <p className="step-desc">Define success metrics for your swap contract (optional; the weights must add up to 100)</p>
             {form.kpis.map((kpi, i) => (
               <div key={i} className="kpi-row">
                 <input placeholder="KPI Name (e.g. Revenue)" value={kpi.name}
@@ -125,11 +155,15 @@ const CreateProject = () => {
                   <button className="btn-remove" onClick={() => removeKPI(i)}><Trash2 size={16} /></button>}
               </div>
             ))}
+            {filledKPIs.length > 0 && weightSum !== 100 && (
+              <p className="step-desc" style={{ color: '#e94560' }}>Weights add up to {weightSum}, they must add up to 100.</p>
+            )}
             <button className="btn-add-kpi" onClick={addKPI}><Plus size={16} /> Add KPI</button>
             <div className="btn-row">
               <button className="btn-secondary" onClick={() => setStep(2)}>← Back</button>
               <motion.button className="btn-primary" onClick={handleSubmit}
-                disabled={loading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                disabled={loading || (filledKPIs.length > 0 && weightSum !== 100)}
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 {loading ? <span className="spinner" /> : '🚀 Create Project'}
               </motion.button>
             </div>

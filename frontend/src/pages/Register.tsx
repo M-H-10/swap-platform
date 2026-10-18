@@ -1,26 +1,32 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { register as registerAPI } from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context';
+import { errorMessage } from '../lib/format';
+import type { RegisterInput, Role } from '../types';
 import toast from 'react-hot-toast';
 
+const textFields = [
+  { name: 'username', type: 'text', label: 'Username', placeholder: 'john_doe' },
+  { name: 'email', type: 'email', label: 'Email', placeholder: 'your@email.com' },
+  { name: 'password', type: 'password', label: 'Password (8+ characters)', placeholder: '••••••••' },
+] as const;
+
 const Register = () => {
-  const [form, setForm] = useState({ username: '', email: '', password: '', role: 'developer' });
+  const [form, setForm] = useState<RegisterInput>({ username: '', email: '', password: '', role: 'developer' });
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await registerAPI(form);
-      login({ username: data.username, userId: data.userId, role: data.role }, data.token);
-      toast.success(`Welcome, ${data.username}!`);
+      const user = await register(form);
+      toast.success(`Welcome, ${user.username}!`);
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      toast.error(errorMessage(err, 'Registration failed'));
     }
     setLoading(false);
   };
@@ -37,18 +43,17 @@ const Register = () => {
           <p>Create your account and start trading reputation</p>
         </div>
         <form onSubmit={handleSubmit}>
-          {['username', 'email', 'password'].map(field => (
-            <div key={field} className="form-group">
-              <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
-              <input type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
-                placeholder={field === 'username' ? 'John Doe' : field === 'email' ? 'your@email.com' : '••••••••'}
-                value={form[field]}
-                onChange={(e) => setForm({...form, [field]: e.target.value})} required />
+          {textFields.map(f => (
+            <div key={f.name} className="form-group">
+              <label>{f.label}</label>
+              <input type={f.type} placeholder={f.placeholder}
+                value={form[f.name]}
+                onChange={(e) => setForm({...form, [f.name]: e.target.value})} required />
             </div>
           ))}
           <div className="form-group">
             <label>Your Role</label>
-            <select value={form.role} onChange={(e) => setForm({...form, role: e.target.value})}>
+            <select value={form.role} onChange={(e) => setForm({...form, role: e.target.value as Role})}>
               <option value="developer">Developer</option>
               <option value="designer">Designer</option>
               <option value="manager">Manager</option>

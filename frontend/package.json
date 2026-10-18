@@ -1,11 +1,12 @@
 {
-  "name": "frontend",
+  "name": "swap-platform-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
+    "typecheck": "tsc",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -28,6 +29,8 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
     "vite": "^8.0.12"
   }
 }

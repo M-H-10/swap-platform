@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { login as loginAPI } from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context';
+import { errorMessage } from '../lib/format';
 import toast from 'react-hot-toast';
 
 const Login = () => {
@@ -11,16 +11,15 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await loginAPI(form);
-      login({ username: data.username, userId: data.userId, role: data.role, reputation: data.reputation }, data.token);
-      toast.success(`Welcome back, ${data.username}!`);
+      const user = await login(form);
+      toast.success(`Welcome back, ${user.username}!`);
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      toast.error(errorMessage(err, 'Login failed'));
     }
     setLoading(false);
   };

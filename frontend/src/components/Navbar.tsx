@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { BarChart2, Home, FolderOpen, PlusCircle, LogOut, User } from 'lucide-react';
@@ -9,13 +9,13 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     toast.success('Logged out');
     navigate('/');
   };
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <motion.nav

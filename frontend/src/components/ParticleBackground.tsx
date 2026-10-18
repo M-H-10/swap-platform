@@ -1,15 +1,26 @@
 import { useEffect, useRef } from 'react';
 
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  opacity: number;
+  color: string;
+}
+
 const ParticleBackground = () => {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const particles = [];
+    const particles: Particle[] = [];
     const count = 80;
 
     for (let i = 0; i < count; i++) {
@@ -24,7 +35,7 @@ const ParticleBackground = () => {
       });
     }
 
-    let animId;
+    let animId: number;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particles.forEach(p => {
@@ -39,7 +50,7 @@ const ParticleBackground = () => {
         ctx.globalAlpha = p.opacity;
         ctx.fill();
 
-        // رسم خطوط بين الجسيمات القريبة
+        // lines between particles that are close to each other
         particles.forEach(p2 => {
           const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
           if (dist < 100) {
