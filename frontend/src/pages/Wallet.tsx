@@ -86,7 +86,7 @@ const Wallet = () => {
   return (
     <div className="page">
       <div className="page-title">
-        <h1>💳 Wallet</h1>
+        <h1>Wallet</h1>
       </div>
 
       <div className="grid-2">

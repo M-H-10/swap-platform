@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { AuthProvider } from './context/AuthProvider';
 import { useAuth } from './context/auth-context';
+import { ThemeProvider } from './context/ThemeProvider';
 import Navbar from './components/Navbar';
-import ParticleBackground from './components/ParticleBackground';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -26,7 +27,6 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
 const AppContent = () => (
   <>
-    <ParticleBackground />
     <Navbar />
     <main className="main-content">
       <Routes>
@@ -46,10 +46,16 @@ const AppContent = () => (
   </>
 );
 
+// reducedMotion="user": if the system asks for less motion, framer-motion
+// skips the movement and keeps only the fade.
 const App = () => (
-  <AuthProvider>
-    <AppContent />
-  </AuthProvider>
+  <ThemeProvider>
+    <MotionConfig reducedMotion="user">
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </MotionConfig>
+  </ThemeProvider>
 );
 
 export default App;

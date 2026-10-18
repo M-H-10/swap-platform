@@ -1,93 +1,124 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Shield, Zap, Users } from 'lucide-react';
+import TermSheet from '../components/TermSheet';
+import { useAuth } from '../context/auth-context';
+import type { SwapTerms } from '../types';
 
-const features = [
-  { icon: <TrendingUp size={32} />, title: 'Smart Swap Calculation', desc: 'AI-powered algorithm calculates fair swap ratios based on reputation and KPIs' },
-  { icon: <Shield size={32} />, title: 'Escrow Protection', desc: 'Automatic escrow account secures both parties during the project lifecycle' },
-  { icon: <Zap size={32} />, title: 'Risk Visualization', desc: 'Real-time risk profile charts for transparent decision making' },
-  { icon: <Users size={32} />, title: 'Reputation System', desc: 'Historical performance data drives fair contract terms automatically' },
+// An example contract for the first screen. These are the real numbers that
+// the calculator gives for the seed project "Brand identity for a coffee shop".
+const noRisk = { expected_value: 0, max_gain: 0, max_loss: 0 };
+const exampleTerms: SwapTerms = {
+  share_a_bp: 7090, share_b_bp: 2910,
+  escrow_amount: 800_000, penalty_a: 232_800, penalty_b: 567_200,
+  success_probability_bp: 4820, risk_a: noRisk, risk_b: noRisk,
+};
+
+const steps = [
+  {
+    title: 'The calculator proposes terms',
+    text: 'It reads the project and the reputation of both people, and gives a share of the result and a guarantee for each side.',
+  },
+  {
+    title: 'Guarantees go into escrow',
+    text: 'When the partner accepts, both guarantees are locked. Nobody can take the money out alone.',
+  },
+  {
+    title: 'Both report the result',
+    text: 'If the answers match, the escrow is released or paid as penalties, and the reputation of both people is updated.',
+  },
 ];
 
-const Home = () => (
-  <div className="home">
-    <div className="hero">
-      <motion.div
-        className="hero-content"
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-      >
-        <motion.div
-          className="hero-badge"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3, type: 'spring' }}
-        >
-          🚀 New Financial Instrument
+// One quick, quiet entrance: a short rise and a fade, nothing bounces.
+const rise = (delay = 0) => ({
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.4, delay, ease: [0.23, 1, 0.32, 1] as const },
+});
+
+const Home = () => {
+  const { user } = useAuth();
+
+  return (
+    <div className="home">
+      <section className="home-hero">
+        <motion.div {...rise()}>
+          <p className="eyebrow">Reputation swaps for freelancers and startups</p>
+          <h1>Share the result of a project, not only the invoice.</h1>
+          <p className="lead">
+            Swap Platform writes a fair contract between a project owner and a partner: who gets which
+            share if the project succeeds, and how much each side guarantees if it fails.
+          </p>
+          <div className="hero-buttons">
+            <Link to="/projects" className="btn-primary">Browse projects</Link>
+            {user
+              ? <Link to="/dashboard" className="btn-secondary">My swaps</Link>
+              : <Link to="/register" className="btn-secondary">Create an account</Link>}
+          </div>
         </motion.div>
-        <h1>Reputation <span className="gradient-text">Swap</span> Platform</h1>
-        <p>The world's first automated clearing center for reputation-based derivative contracts between freelancers and startups</p>
-        <div className="hero-buttons">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/projects" className="btn-primary">Explore Projects</Link>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/register" className="btn-secondary">Get Started Free</Link>
-          </motion.div>
+
+        <motion.div className="hero-sheet" {...rise(0.1)}>
+          <div className="hero-sheet-head">
+            <h3>Brand identity for a coffee shop</h3>
+            <span className="tag">Example contract</span>
+          </div>
+          <TermSheet partyA="boris_design" partyB="carol_pm" terms={exampleTerms} />
+          <div className="hero-sheet-foot">
+            <span>Success probability <b>48.2%</b></span>
+            <span>Deadline <b>30 days</b></span>
+          </div>
+        </motion.div>
+      </section>
+
+      <section className="home-section">
+        <h2>How a swap works</h2>
+        <p className="lead">Three steps, and the money is never in one person's hands.</p>
+        <div className="steps-row">
+          {steps.map((s, i) => (
+            <motion.div key={s.title} className="how-step"
+              {...rise(0.15 + i * 0.05)}>
+              <span className="how-num">{i + 1}</span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </motion.div>
+          ))}
         </div>
-      </motion.div>
+      </section>
 
-      <motion.div
-        className="hero-stats"
-        initial={{ opacity: 0, x: 60 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-      >
-        {[
-          { label: 'Active Swaps', value: '127' },
-          { label: 'Total Volume', value: '₽2.4M' },
-          { label: 'Success Rate', value: '78%' },
-        ].map((stat, i) => (
-          <motion.div key={i} className="stat-card"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + i * 0.1 }}
-          >
-            <span className="stat-value">{stat.value}</span>
-            <span className="stat-label">{stat.label}</span>
-          </motion.div>
-        ))}
-      </motion.div>
-    </div>
+      <section className="home-section">
+        <h2>Two opinions on every project</h2>
+        <p className="lead">
+          The chance of success decides the terms. You see how it was calculated, and a second opinion
+          from a model trained on finished projects.
+        </p>
+        <div className="two-sources">
+          <div className="source-card">
+            <span className="tag tag-muted">Formula</span>
+            <h3>Rules you can read</h3>
+            <p>Reputation, success rate, experience, complexity, budget and deadline each add or remove
+              points. The project page shows every factor.</p>
+          </div>
+          <div className="source-card">
+            <span className="tag">ML model</span>
+            <h3>Learned from data</h3>
+            <p>A RandomForest model gives its own probability in the background. When the two disagree,
+              you know the project needs a closer look.</p>
+          </div>
+        </div>
+      </section>
 
-    <div className="features">
-      <motion.h2
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-      >
-        How It Works
-      </motion.h2>
-      <div className="features-grid">
-        {features.map((f, i) => (
-          <motion.div
-            key={i}
-            className="feature-card"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.15 }}
-            whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(108,99,255,0.3)' }}
-          >
-            <div className="feature-icon">{f.icon}</div>
-            <h3>{f.title}</h3>
-            <p>{f.desc}</p>
-          </motion.div>
-        ))}
-      </div>
+      {!user && (
+        <section className="home-section">
+          <div className="home-cta">
+            <div>
+              <h2>Start with a project</h2>
+              <p>Create an account, describe a project, and the calculator proposes the first terms.</p>
+            </div>
+            <Link to="/register" className="btn-primary">Create an account</Link>
+          </div>
+        </section>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 export default Home;

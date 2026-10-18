@@ -30,9 +30,9 @@ describe('percentages', () => {
   });
 
   it('colours the probability by its level', () => {
-    expect(probabilityColor(7000)).toBe('#00d4aa'); // green from 70%
-    expect(probabilityColor(4000)).toBe('#f59e0b'); // amber from 40%
-    expect(probabilityColor(3999)).toBe('#e94560'); // red below
+    expect(probabilityColor(7000)).toBe('var(--success)'); // green from 70%
+    expect(probabilityColor(4000)).toBe('var(--warning)'); // amber from 40%
+    expect(probabilityColor(3999)).toBe('var(--danger)'); // red below
   });
 });
 

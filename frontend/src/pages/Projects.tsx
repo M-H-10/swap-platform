@@ -24,14 +24,12 @@ const Projects = () => {
   return (
     <div className="projects-page">
       <motion.div className="page-header"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}>
-        <h1>Active Projects</h1>
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}>
+        <h1>Open projects</h1>
         <p>Find projects to create a reputation swap contract</p>
         {user && (
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/create-project" className="btn-primary">+ New Project</Link>
-          </motion.div>
+          <Link to="/create-project" className="btn-primary">New project</Link>
         )}
       </motion.div>
 
@@ -45,10 +43,9 @@ const Projects = () => {
         <div className="projects-grid">
           {projects.map((p, i) => (
             <motion.div key={p.id} className="project-card"
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -6 }}>
+              transition={{ delay: Math.min(i, 8) * 0.04, duration: 0.3 }}>
               <div className="card-header">
                 <span className="category-badge">{p.category}</span>
                 <div className="prob-circle" style={{ '--color': probabilityColor(p.success_probability_bp) } as CSSProperties}>
@@ -61,19 +58,18 @@ const Projects = () => {
               <div className="card-stats">
                 <span><DollarSign size={14} /> {formatRub(p.budget)}</span>
                 <span><Clock size={14} /> {p.duration_days} days</span>
-                <span><Users size={14} /> {p.team_size} members</span>
+                <span><Users size={14} /> {p.team_size} {p.team_size === 1 ? 'member' : 'members'}</span>
                 <span><TrendingUp size={14} /> complexity {p.complexity}/10</span>
               </div>
               <div className="card-footer">
                 <span className="author">by {p.creator.username}</span>
                 {/* Only the creator offers a swap on a project (party A). */}
                 {user && user.id === p.creator.id && (
-                  <motion.button
+                  <button
                     className="btn-swap"
-                    whileHover={{ scale: 1.05 }}
                     onClick={() => navigate(`/swap-calculator/${p.id}`)}>
-                    Find a partner ⚡
-                  </motion.button>
+                    Find a partner
+                  </button>
                 )}
               </div>
             </motion.div>

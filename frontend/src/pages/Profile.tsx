@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { getReputation } from '../api';
-import { cssVar, errorMessage, formatDate, formatPercent, formatRub } from '../lib/format';
+import { errorMessage, formatDate, formatPercent, formatRub } from '../lib/format';
+import { useChartTheme } from '../lib/chart-theme';
 import type { ReputationProfile } from '../types';
 
 // Why the score changed (the "reason" saved with every snapshot).
@@ -22,6 +23,7 @@ const Stars = ({ value }: { value: number }) => (
 );
 
 const Profile = () => {
+  const chart = useChartTheme();
   const { id = '' } = useParams();
   const [profile, setProfile] = useState<ReputationProfile | null>(null);
   const [error, setError] = useState('');
@@ -94,13 +96,13 @@ const Profile = () => {
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={chartData}>
-                <CartesianGrid stroke={cssVar('--border')} vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: cssVar('--text2'), fontSize: 11 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: cssVar('--text2'), fontSize: 11 }} width={32} />
-                <Tooltip
-                  contentStyle={{ background: cssVar('--bg2'), border: `1px solid ${cssVar('--accent')}` }}
+                <CartesianGrid stroke={chart.grid} vertical={false} />
+                <XAxis dataKey="date" tick={chart.tick} stroke={chart.grid} />
+                <YAxis domain={[0, 100]} tick={chart.tick} stroke={chart.grid} width={32} />
+                <Tooltip contentStyle={chart.tooltip}
                   formatter={(v, _name, item) => [`${v}%`, item.payload.reason]} />
-                <Line type="monotone" dataKey="score" stroke={cssVar('--accent')} strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="score" stroke={chart.accent} strokeWidth={2}
+                  dot={{ r: 3, fill: chart.accent }} />
               </LineChart>
             </ResponsiveContainer>
           )}
