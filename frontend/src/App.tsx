@@ -11,6 +11,10 @@ import Projects from './pages/Projects';
 import CreateProject from './pages/CreateProject';
 import SwapCalculator from './pages/SwapCalculator';
 import Dashboard from './pages/Dashboard';
+import Wallet from './pages/Wallet';
+import SwapDetail from './pages/SwapDetail';
+import Profile from './pages/Profile';
+import ProjectDetail from './pages/ProjectDetail';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, ready } = useAuth();
@@ -30,9 +34,13 @@ const AppContent = () => (
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:id" element={<ProjectDetail />} />
+        <Route path="/users/:id" element={<Profile />} />
         <Route path="/create-project" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
         <Route path="/swap-calculator/:projectId" element={<ProtectedRoute><SwapCalculator /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/swaps/:id" element={<ProtectedRoute><SwapDetail /></ProtectedRoute>} />
       </Routes>
     </main>
   </>

@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth-context';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { BarChart2, Home, FolderOpen, PlusCircle, LogOut, User } from 'lucide-react';
+import { BarChart2, Home, FolderOpen, PlusCircle, LogOut, User, Wallet } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -35,7 +35,8 @@ const Navbar = () => {
           <>
             <Link to="/create-project" className={isActive('/create-project') ? 'active' : ''}><PlusCircle size={16} /> New Project</Link>
             <Link to="/dashboard" className={isActive('/dashboard') ? 'active' : ''}><BarChart2 size={16} /> Dashboard</Link>
-            <span className="user-badge"><User size={14} /> {user.username}</span>
+            <Link to="/wallet" className={isActive('/wallet') ? 'active' : ''}><Wallet size={16} /> Wallet</Link>
+            <Link to={`/users/${user.id}`} className="user-badge"><User size={14} /> {user.username}</Link>
             <button onClick={handleLogout} className="logout-btn"><LogOut size={14} /> Logout</button>
           </>
         ) : (

@@ -56,7 +56,7 @@ const Projects = () => {
                   <small>success</small>
                 </div>
               </div>
-              <h3>{p.title}</h3>
+                            <h3><Link to={`/projects/${p.id}`} className="card-title-link">{p.title}</Link></h3>
               <p>{p.description.length > 100 ? p.description.substring(0, 100) + '...' : p.description}</p>
               <div className="card-stats">
                 <span><DollarSign size={14} /> {formatRub(p.budget)}</span>

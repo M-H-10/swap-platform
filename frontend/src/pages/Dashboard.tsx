@@ -1,4 +1,5 @@
 import { useState, useEffect, type CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getSwaps, getReputation, acceptSwap, rejectSwap, cancelSwap } from '../api';
 import { useAuth } from '../context/auth-context';
@@ -69,7 +70,8 @@ const Dashboard = () => {
           <div className="avatar">{user?.username?.[0]?.toUpperCase()}</div>
           <div>
             <h3>{user?.username}</h3>
-            <span className="role-badge">{user?.role}</span>
+            <span className="role-badge">{user?.role}</span>{' '}
+            <Link className="link" to={`/users/${user?.id}`}>public profile →</Link>
           </div>
         </div>
       </motion.div>
@@ -128,10 +130,12 @@ const Dashboard = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.08 }}>
-              <div className="swap-project">{swap.project.title}</div>
+              <div className="swap-project">
+                <Link className="card-title-link" to={`/swaps/${swap.id}`}>{swap.project.title}</Link>
+              </div>
               <div className="swap-details">
-                <span>Party A: <strong>{swap.party_a.username}</strong> ({formatPercent(swap.terms.share_a_bp)})</span>
-                <span>Party B: <strong>{swap.party_b.username}</strong> ({formatPercent(swap.terms.share_b_bp)})</span>
+                <span>Party A: <Link className="link" to={`/users/${swap.party_a.id}`}>{swap.party_a.username}</Link> ({formatPercent(swap.terms.share_a_bp)})</span>
+                <span>Party B: <Link className="link" to={`/users/${swap.party_b.id}`}>{swap.party_b.username}</Link> ({formatPercent(swap.terms.share_b_bp)})</span>
                 <span>Escrow: <strong>{formatRub(swap.terms.escrow_amount)}</strong></span>
               </div>
               <div className="swap-footer">
@@ -152,6 +156,11 @@ const Dashboard = () => {
                 {swap.status === 'proposed' && iAmA && (
                   <motion.button className="btn-cancel" whileHover={{ scale: 1.05 }}
                     onClick={() => handleCancel(swap)}>Cancel ✕</motion.button>
+                )}
+                {(swap.status === 'active' || swap.status === 'completed' || swap.status === 'failed') && (
+                  <Link className="btn-small" to={`/swaps/${swap.id}`}>
+                    {swap.status === 'active' ? 'Report result →' : 'Details & review →'}
+                  </Link>
                 )}
                 {swap.status === 'active' && !iAskedCancel && (
                   <motion.button className="btn-cancel" whileHover={{ scale: 1.05 }}

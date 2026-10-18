@@ -41,3 +41,19 @@ export function errorMessage(err: unknown, fallback = 'Something went wrong'): s
   }
   return fallback;
 }
+
+
+/** ISO date from the server -> "18 Oct 2026, 20:41" in the user's time zone. */
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+/** The value of a CSS variable from :root, e.g. cssVar('--accent') -> "#6c63ff".
+ *  Charts need real colour values, so they read them from the same
+ *  variables as the CSS. Change a colour once in CSS and the charts follow. */
+export function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}

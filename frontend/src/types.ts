@@ -181,3 +181,49 @@ export interface ReputationProfile {
 export interface ApiErrorBody {
   error: { code: number; message: string; field?: string };
 }
+
+
+// ----- stage 9: wallet, reviews, ML comparison -----
+
+export interface Wallet {
+  balance: number; // kopecks the user can use
+  frozen_balance: number; // kopecks locked as guarantees in active swaps
+  updated_at: string;
+}
+
+export type TransactionType =
+  | 'deposit'
+  | 'escrow_lock'
+  | 'escrow_release'
+  | 'penalty_paid'
+  | 'penalty_received'
+  | 'fee';
+
+/** One line of the ledger. Lines are never changed or deleted. */
+export interface Transaction {
+  id: number;
+  swap_id: string | null;
+  type: TransactionType;
+  amount: number; // kopecks, always positive; the type says the direction
+  balance_after: number;
+  frozen_after: number;
+  description: string;
+  created_at: string;
+}
+
+export type Review = ReputationProfile['reviews'][number];
+export type ReputationPoint = ReputationProfile['history'][number];
+
+export interface ReviewInput {
+  rating: number; // 1..5
+  comment: string;
+}
+
+/** GET /api/projects/:id/prediction: the formula next to the ML model. */
+export interface PredictionComparison {
+  project_id: string;
+  status: 'ready' | 'pending';
+  formula: { success_probability_bp: number };
+  ml: { success_probability_bp: number; model_version: string; updated_at: string } | null;
+  difference_bp: number | null; // ml - formula
+}

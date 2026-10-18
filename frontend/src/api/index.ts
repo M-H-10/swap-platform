@@ -1,7 +1,8 @@
 import { api } from './client';
 import type {
-  AuthResponse, LoginInput, Page, Project, ProjectInput, PublicUser, RegisterInput,
-  ReputationProfile, Score, Swap, SwapCalculation, User,
+  AuthResponse, LoginInput, Page, PredictionComparison, Project, ProjectInput, PublicUser,
+  RegisterInput, ReputationProfile, Review, ReviewInput, Score, Swap, SwapCalculation,
+  Outcome, Transaction, User, Wallet,
 } from '../types';
 
 // One small typed function per server route. The pages call these and
@@ -25,6 +26,21 @@ export const getProjects = (params?: { status?: string; category?: string; q?: s
 export const getProject = (id: string) => api.get<Project>(`/projects/${id}`);
 export const createProject = (data: ProjectInput) =>
   api.post<{ project: Project; score: Score }>('/projects', data);
+/** The formula's score with all its factors, nothing saved. */
+export const estimateProject = (data: ProjectInput) => api.post<Score>('/projects/estimate', data);
+
+// ----- ML prediction (stage 7) -----
+export const getPrediction = (projectId: string) =>
+  api.get<PredictionComparison>(`/projects/${projectId}/prediction`);
+export const requestPrediction = (projectId: string) =>
+  api.post<{ status: 'pending' }>(`/projects/${projectId}/prediction`);
+
+// ----- wallet -----
+export const getWallet = () => api.get<Wallet>('/wallet');
+export const getTransactions = (limit: number, offset: number) =>
+  api.get<{ items: Transaction[]; total: number }>('/wallet/transactions', { params: { limit, offset } });
+/** Free test money. The server allows it only in development. */
+export const deposit = (amount: number) => api.post<Wallet>('/wallet/deposit', { amount });
 
 // ----- swaps -----
 export interface SwapProposal {
@@ -34,6 +50,13 @@ export interface SwapProposal {
 export const calculateSwap = (data: SwapProposal) => api.post<SwapCalculation>('/swaps/calculate', data);
 export const createSwap = (data: SwapProposal) => api.post<Swap>('/swaps', data);
 export const getSwaps = () => api.get<{ items: Swap[] }>('/swaps');
+export const getSwap = (id: string) => api.get<Swap>(`/swaps/${id}`);
 export const acceptSwap = (id: string) => api.post<Swap>(`/swaps/${id}/accept`);
 export const rejectSwap = (id: string) => api.post<Swap>(`/swaps/${id}/reject`);
 export const cancelSwap = (id: string) => api.post<Swap>(`/swaps/${id}/cancel`);
+export const reportOutcome = (id: string, outcome: Outcome) =>
+  api.post<Swap>(`/swaps/${id}/outcome`, { outcome });
+
+// ----- reviews (stage 6) -----
+export const addReview = (swapId: string, data: ReviewInput) =>
+  api.post<Review>(`/swaps/${swapId}/review`, data);
