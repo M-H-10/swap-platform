@@ -17,6 +17,7 @@ type Handlers struct {
 	Wallets     *WalletHandler
 	Swaps       *SwapHandler
 	Reputation  *ReputationHandler
+	Predictions *PredictionHandler
 	RequireAuth fiber.Handler // middleware that checks the access token
 	DemoDeposit bool          // true only in development: allows free test money
 }
@@ -76,6 +77,11 @@ func RegisterRoutes(app *fiber.App, h Handlers) {
 	if h.Reputation != nil {
 		api.Post("/swaps/:id/review", h.RequireAuth, h.Reputation.AddReview) // either party, after the end
 		api.Get("/users/:id/reputation", h.Reputation.Profile)               // anyone can view
+	}
+
+	if h.Predictions != nil {
+		api.Get("/projects/:id/prediction", h.Predictions.Get)                     // anyone can view
+		api.Post("/projects/:id/prediction", h.RequireAuth, h.Predictions.Request) // ask the model again
 	}
 
 	// Anything that did not match a route above ends here.

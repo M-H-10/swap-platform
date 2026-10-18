@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/M-H-10/swap-platform/backend-go/internal/domain"
@@ -17,15 +18,22 @@ type ProjectStore interface {
 	GetCreatorStats(ctx context.Context, userID string) (domain.CreatorStats, error)
 }
 
-// ProjectService holds the rules for projects.
-type ProjectService struct {
-	store ProjectStore
-	now   func() time.Time // the clock; tests replace it with a fixed time
+// PredictionRequester asks the ML service to estimate a project.
+// (PredictionService has this method.)
+type PredictionRequester interface {
+	Request(ctx context.Context, projectID string) error
 }
 
-// NewProjectService builds the service.
-func NewProjectService(store ProjectStore) *ProjectService {
-	return &ProjectService{store: store, now: time.Now}
+// ProjectService holds the rules for projects.
+type ProjectService struct {
+	store       ProjectStore
+	predictions PredictionRequester // may be nil (in tests)
+	now         func() time.Time    // the clock; tests replace it with a fixed time
+}
+
+// NewProjectService builds the service. predictions may be nil.
+func NewProjectService(store ProjectStore, predictions PredictionRequester) *ProjectService {
+	return &ProjectService{store: store, predictions: predictions, now: time.Now}
 }
 
 // Estimate calculates the score of a project without saving it, so the
@@ -51,6 +59,14 @@ func (s *ProjectService) Create(ctx context.Context, creatorID string, in domain
 	p, err := s.store.CreateProject(ctx, creatorID, in, result.SuccessProbabilityBP)
 	if err != nil {
 		return domain.Project{}, domain.ScoreResult{}, err
+	}
+	// Ask the ML service for its own estimate. The project is already
+	// saved, so a problem here is only logged: the creator can ask again
+	// later with POST /api/projects/:id/prediction.
+	if s.predictions != nil {
+		if err := s.predictions.Request(ctx, p.ID); err != nil {
+			log.Printf("ml prediction request for project %s failed: %v", p.ID, err)
+		}
 	}
 	return p, result, nil
 }

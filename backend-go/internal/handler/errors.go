@@ -40,6 +40,8 @@ func ErrorHandler(c fiber.Ctx, err error) error {
 		code, message = fiber.StatusForbidden, err.Error()
 	case errors.Is(err, domain.ErrNotFound):
 		code, message = fiber.StatusNotFound, "not found"
+	case errors.Is(err, domain.ErrUnavailable):
+		code, message = fiber.StatusServiceUnavailable, "the ML service is not available, try again later"
 	}
 
 	// 5xx errors are our fault: log the real cause, but never send it to

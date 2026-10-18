@@ -82,7 +82,7 @@ func newProjectTestService() (*ProjectService, *fakeProjectStore) {
 	store := newFakeProjectStore()
 	store.stats["owner"] = domain.CreatorStats{ReputationBP: 5000, AccountSince: testNow}
 	store.stats["other"] = domain.CreatorStats{ReputationBP: 5000, AccountSince: testNow}
-	svc := NewProjectService(store)
+	svc := NewProjectService(store, nil)
 	svc.now = func() time.Time { return testNow }
 	return svc, store
 }

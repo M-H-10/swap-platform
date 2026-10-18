@@ -20,6 +20,7 @@ type Config struct {
 	Port        string   // port to listen on, e.g. 5002
 	CORSOrigins []string // frontend addresses allowed to call the API
 	DatabaseURL string   // PostgreSQL connection string
+	RabbitMQURL string   // RabbitMQ connection string; empty = ML predictions off
 
 	JWTSecret       string        // key that signs access tokens
 	AccessTokenTTL  time.Duration // how long an access token lives
@@ -51,6 +52,7 @@ func Load() (*Config, error) {
 		Port:        getEnv("APP_PORT", "5002"),
 		CORSOrigins: splitList(getEnv("CORS_ORIGINS", "http://localhost:5173")),
 		DatabaseURL: getEnv("DATABASE_URL", ""),
+		RabbitMQURL: getEnv("RABBITMQ_URL", ""),
 
 		JWTSecret:       getEnv("JWT_SECRET", ""),
 		AccessTokenTTL:  accessTTL,
