@@ -156,7 +156,7 @@ const CreateProject = () => {
               </div>
             ))}
             {filledKPIs.length > 0 && weightSum !== 100 && (
-              <p className="step-desc" style={{ color: '#e94560' }}>Weights add up to {weightSum}, they must add up to 100.</p>
+              <p className="step-desc form-error">Weights add up to {weightSum}, they must add up to 100.</p>
             )}
             <button className="btn-add-kpi" onClick={addKPI}><Plus size={16} /> Add KPI</button>
             <div className="btn-row">
@@ -164,7 +164,7 @@ const CreateProject = () => {
               <motion.button className="btn-primary" onClick={handleSubmit}
                 disabled={loading || (filledKPIs.length > 0 && weightSum !== 100)}
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                {loading ? <span className="spinner" /> : '🚀 Create Project'}
+                {loading ? <span className="spinner" /> : 'Create project'}
               </motion.button>
             </div>
           </motion.div>

@@ -25,11 +25,12 @@ export function formatPercent(bp: number): string {
   return bpToPercent(bp).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%';
 }
 
-/** Colour for a success probability (basis points). */
+/** Colour for a success probability (basis points), as a CSS variable,
+ *  so it follows the light / dark theme. */
 export function probabilityColor(bp: number): string {
-  if (bp >= 7000) return '#00d4aa';
-  if (bp >= 4000) return '#f59e0b';
-  return '#e94560';
+  if (bp >= 7000) return 'var(--success)';
+  if (bp >= 4000) return 'var(--warning)';
+  return 'var(--danger)';
 }
 
 /** The message to show for any failed request. */
@@ -49,6 +50,12 @@ export function formatDate(iso: string | null | undefined): string {
   return new Date(iso).toLocaleString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
+}
+
+/** Whole days from now until an ISO date (rounded up), or null without a date. */
+export function daysUntil(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
 }
 
 /** The value of a CSS variable from :root, e.g. cssVar('--accent') -> "#6c63ff".

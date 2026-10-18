@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { estimateProject, getPrediction, getProject, requestPrediction } from '../api';
 import { useAuth } from '../context/auth-context';
-import { bpToPercent, errorMessage, formatDate, formatPercent, formatRub, probabilityColor } from '../lib/format';
+import { bpToPercent, errorMessage, formatDate, formatPercent, formatRub } from '../lib/format';
 import type { PredictionComparison, Project, ScoreFactor } from '../types';
 
 // The ML answer comes later through RabbitMQ (stage 7), so while it is
@@ -115,7 +115,7 @@ const ProjectDetail = () => {
         {isCreator && project.status === 'open' && (
           <div className="actions">
             <button className="btn-primary" onClick={() => navigate(`/swap-calculator/${project.id}`)}>
-              Find a partner ⚡
+              Find a partner
             </button>
           </div>
         )}
@@ -146,11 +146,11 @@ const ProjectDetail = () => {
 
         <motion.div className="panel" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <h3>Success probability: formula vs ML model</h3>
-          <Bar label="Formula (stage 4)" bp={formulaBP} color={probabilityColor(formulaBP)} />
+          <Bar label="Formula" bp={formulaBP} color="var(--text)" />
           {ml ? (
             <>
               <Bar label={`ML model (${ml.model_version})`} bp={ml.success_probability_bp}
-                color={probabilityColor(ml.success_probability_bp)} />
+                color="var(--accent)" />
               <p className="muted">
                 Difference: <strong>{diff !== null && diff > 0 ? '+' : ''}{formatPercent(diff ?? 0)}</strong>
                 {' '}({diff === 0 ? 'they agree' : diff !== null && diff > 0 ? 'the model is more optimistic' : 'the model is more careful'})

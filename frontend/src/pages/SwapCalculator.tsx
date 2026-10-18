@@ -7,7 +7,9 @@ import {
 } from 'recharts';
 import { getProject, calculateSwap, createSwap, searchUsers } from '../api';
 import { useAuth } from '../context/auth-context';
-import { bpToPercent, errorMessage, formatPercent, formatRub, probabilityColor } from '../lib/format';
+import { errorMessage, formatPercent, formatRub, probabilityColor } from '../lib/format';
+import { useChartTheme } from '../lib/chart-theme';
+import TermSheet from '../components/TermSheet';
 import type { Project, PublicUser, SwapCalculation } from '../types';
 import toast from 'react-hot-toast';
 import { Search, User } from 'lucide-react';
@@ -16,6 +18,7 @@ const SwapCalculator = () => {
   const { projectId = '' } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const chart = useChartTheme();
   const [project, setProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<PublicUser[]>([]);
@@ -96,153 +99,106 @@ const SwapCalculator = () => {
   return (
     <div className="swap-calculator">
       <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        ⚡ Swap Calculator
+        Swap calculator
       </motion.h1>
 
       {project && (
         <motion.div className="project-info-card"
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
           <h3>{project.title}</h3>
           <div className="info-row">
-            <span>Budget: <strong>{formatRub(project.budget)}</strong></span>
-            <span>Duration: <strong>{project.duration_days} days</strong></span>
-            <span>Success Probability: <strong style={{ color: probabilityColor(project.success_probability_bp) }}>{formatPercent(project.success_probability_bp)}</strong></span>
+            <span>Budget <strong>{formatRub(project.budget)}</strong></span>
+            <span>Duration <strong>{project.duration_days} days</strong></span>
+            <span>Success probability <strong style={{ color: probabilityColor(project.success_probability_bp) }}>{formatPercent(project.success_probability_bp)}</strong></span>
           </div>
           {user && project.creator.id !== user.id && (
-            <p style={{ color: '#e94560', marginTop: '8px' }}>Only the creator of this project can propose a swap.</p>
+            <p className="form-error">Only the creator of this project can propose a swap.</p>
           )}
         </motion.div>
       )}
 
       <motion.div className="calculator-input"
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <h3>Find Party B by Username</h3>
-        <div className="search-wrapper" style={{ position: 'relative' }}>
-          <div className="input-row">
-            <div style={{ position: 'relative', flex: 1 }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
-              <input
-                style={{ paddingLeft: '36px' }}
-                placeholder="Search by username..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-              <AnimatePresence>
-                {searchResults.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0,
-                      background: '#1a1a2e', border: '1px solid rgba(108,99,255,0.4)',
-                      borderRadius: '8px', zIndex: 10, marginTop: '4px'
-                    }}>
-                    {searchResults.map(u => (
-                      <div
-                        key={u.id}
-                        onClick={() => selectUser(u)}
-                        style={{
-                          padding: '10px 16px', cursor: 'pointer', display: 'flex',
-                          alignItems: 'center', gap: '10px', borderBottom: '1px solid rgba(255,255,255,0.05)'
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(108,99,255,0.15)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <User size={14} color="#6c63ff" />
-                        <span style={{ fontWeight: 600 }}>{u.username}</span>
-                        <span style={{ color: '#888', fontSize: '0.8rem' }}>{u.role}</span>
-                        <span style={{ marginLeft: 'auto', color: '#f59e0b', fontSize: '0.8rem' }}>⭐ {formatPercent(u.reputation_bp)}</span>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <motion.button
-              className="btn-primary"
-              onClick={handleCalculate}
-              disabled={loading || !selectedUser}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}>
-              {loading ? <span className="spinner" /> : 'Calculate ⚡'}
-            </motion.button>
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.3 }}>
+        <h3>Find party B by username</h3>
+        <div className="input-row">
+          <div className="search-box">
+            <Search size={16} />
+            <input
+              placeholder="Search by username..."
+              aria-label="Search by username"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+            <AnimatePresence>
+              {searchResults.length > 0 && (
+                <motion.div className="search-results"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}>
+                  {searchResults.map(u => (
+                    <button type="button" key={u.id} className="search-result" onClick={() => selectUser(u)}>
+                      <User size={14} />
+                      <strong>{u.username}</strong>
+                      <span className="role">{u.role}</span>
+                      <span className="rep">reputation {formatPercent(u.reputation_bp)}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+          <button className="btn-primary" onClick={handleCalculate} disabled={loading || !selectedUser}>
+            {loading ? <span className="spinner" /> : 'Calculate terms'}
+          </button>
         </div>
 
         {selectedUser && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{
-              marginTop: '12px', padding: '10px 16px',
-              background: 'rgba(0,212,170,0.1)', border: '1px solid rgba(0,212,170,0.3)',
-              borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px'
-            }}>
-            <User size={16} color="#00d4aa" />
-            <span>Selected: <strong>{selectedUser.username}</strong></span>
-            <span style={{ color: '#888' }}>{selectedUser.role}</span>
-            <span style={{ color: '#f59e0b' }}>⭐ reputation {formatPercent(selectedUser.reputation_bp)}</span>
+          <motion.div className="selected-user" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <User size={16} />
+            <span>Selected <strong>{selectedUser.username}</strong></span>
+            <span className="muted-inline">{selectedUser.role}</span>
+            <span className="muted-inline">reputation {formatPercent(selectedUser.reputation_bp)}</span>
           </motion.div>
         )}
       </motion.div>
 
       {result && t && (
         <motion.div className="results-section"
-          initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}>
 
-          <div className="success-probability">
-            <div className="prob-gauge">
-              <svg viewBox="0 0 120 60" className="gauge-svg">
-                <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="#1a1a2e" strokeWidth="12" />
-                <path d="M10 60 A50 50 0 0 1 110 60" fill="none"
-                  stroke={probabilityColor(probability)}
-                  strokeWidth="12"
-                  strokeDasharray={`${bpToPercent(probability) * 1.57} 157`} />
-              </svg>
-              <div className="gauge-value">{formatPercent(probability)}</div>
-              <div className="gauge-label">Success Probability</div>
-            </div>
-          </div>
+          <section className="panel term-sheet-card">
+            <h3>Proposed terms · success probability {formatPercent(probability)}</h3>
+            <TermSheet partyA={result.party_a.username} partyB={result.party_b.username}
+              terms={t} escrowLabel="Locked when B accepts" />
+          </section>
 
-          <div className="swap-terms">
-            <div className="party-card party-a">
-              <h4>🅐 {result.party_a.username} (You)</h4>
-              <div className="share-big">{formatPercent(t.share_a_bp)}</div>
-              <div className="share-label">on success</div>
-              <div className="payment">Guarantee: {formatRub(t.penalty_a)}, lost on failure</div>
-              <div style={{ color: '#888', fontSize: '0.8rem', marginTop: '4px' }}>
-                Expected value: {formatRub(t.risk_a.expected_value)}
+          <div className="risk-row">
+            {[
+              { name: result.party_a.username, r: t.risk_a },
+              { name: result.party_b.username, r: t.risk_b },
+            ].map(({ name, r }) => (
+              <div className="risk-card" key={name}>
+                <h4>{name}</h4>
+                <dl className="kv">
+                  <dt>Expected value</dt><dd>{formatRub(r.expected_value)}</dd>
+                  <dt>On success</dt><dd className="amount-plus">+{formatRub(r.max_gain)}</dd>
+                  <dt>On failure</dt><dd className="amount-minus">−{formatRub(r.max_loss)}</dd>
+                </dl>
               </div>
-            </div>
-            <div className="swap-icon">⚡</div>
-            <div className="party-card party-b">
-              <h4>🅑 {result.party_b.username}</h4>
-              <div className="share-big">{formatPercent(t.share_b_bp)}</div>
-              <div className="share-label">on success</div>
-              <div className="payment">Guarantee: {formatRub(t.penalty_b)}, lost on failure</div>
-              <div style={{ color: '#888', fontSize: '0.8rem', marginTop: '4px' }}>
-                Expected value: {formatRub(t.risk_b.expected_value)}
-              </div>
-            </div>
-          </div>
-
-          <div className="escrow-info">
-            <div className="escrow-card">
-              🔒 Escrow Account: <strong>{formatRub(t.escrow_amount)}</strong>
-              <span className="escrow-badge">Locked when Party B accepts</span>
-            </div>
+            ))}
           </div>
 
           <div className="charts-grid">
             <div className="chart-card">
-              <h4>Risk Profile Comparison (₽ thousands)</h4>
+              <h4>Risk profile (₽ thousands)</h4>
               <ResponsiveContainer width="100%" height={250}>
                 <RadarChart data={riskData}>
-                  <PolarGrid stroke="#2a2a4a" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 11 }} />
-                  <Radar name="Party A" dataKey="A" stroke="#6c63ff" fill="#6c63ff" fillOpacity={0.3} />
-                  <Radar name="Party B" dataKey="B" stroke="#e94560" fill="#e94560" fillOpacity={0.3} />
+                  <PolarGrid stroke={chart.grid} />
+                  <PolarAngleAxis dataKey="subject" tick={chart.tick} />
+                  <Radar name={result.party_a.username} dataKey="A" stroke={chart.partyA} fill={chart.partyA} fillOpacity={0.25} />
+                  <Radar name={result.party_b.username} dataKey="B" stroke={chart.partyB} fill={chart.partyB} fillOpacity={0.35} />
+                  <Legend wrapperStyle={{ fontSize: 13 }} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -250,26 +206,21 @@ const SwapCalculator = () => {
               <h4>Result for each party (₽)</h4>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={scenarioData}>
-                  <XAxis dataKey="name" tick={{ fill: '#888', fontSize: 11 }} />
-                  <YAxis tick={{ fill: '#888', fontSize: 11 }} />
-                  <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #6c63ff' }}
+                  <XAxis dataKey="name" tick={chart.tick} stroke={chart.grid} tickLine={false} />
+                  <YAxis tick={chart.tick} stroke={chart.grid} tickLine={false} axisLine={false} width={64} />
+                  <Tooltip contentStyle={chart.tooltip} cursor={chart.tooltipCursor}
                     formatter={(v) => `₽${Number(v).toLocaleString('en-US')}`} />
-                  <Legend />
-                  <Bar dataKey="A" fill="#6c63ff" name={result.party_a.username} />
-                  <Bar dataKey="B" fill="#e94560" name={result.party_b.username} />
+                  <Legend wrapperStyle={{ fontSize: 13 }} />
+                  <Bar dataKey="A" fill={chart.partyA} name={result.party_a.username} radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="B" fill={chart.partyB} name={result.party_b.username} radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <motion.button
-            className="btn-create-swap"
-            onClick={handleCreateSwap}
-            disabled={creating}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}>
-            {creating ? <span className="spinner" /> : '🚀 Propose Swap Contract'}
-          </motion.button>
+          <button className="btn-create-swap" onClick={handleCreateSwap} disabled={creating}>
+            {creating ? <span className="spinner" /> : `Propose this swap to ${result.party_b.username}`}
+          </button>
         </motion.div>
       )}
     </div>

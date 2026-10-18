@@ -28,14 +28,13 @@ const Login = () => {
     <div className="auth-container">
       <motion.div
         className="auth-box"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
       >
         <div className="auth-header">
-          <div className="auth-icon">⚡</div>
           <h2>Welcome Back</h2>
-          <p>Sign in to your SwapPlatform account</p>
+          <p>Sign in to your Swap Platform account</p>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
