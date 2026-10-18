@@ -34,12 +34,11 @@ const Register = () => {
   return (
     <div className="auth-container">
       <motion.div className="auth-box"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}>
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}>
         <div className="auth-header">
-          <div className="auth-icon">🚀</div>
-          <h2>Join SwapPlatform</h2>
+          <h2>Create an account</h2>
           <p>Create your account and start trading reputation</p>
         </div>
         <form onSubmit={handleSubmit}>
